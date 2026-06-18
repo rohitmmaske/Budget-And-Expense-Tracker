@@ -1,0 +1,21 @@
+# Virtual environments
+.venv/
+venv/
+
+# Environment secrets — never commit
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# SQLite dev database — not needed on Render
+budget_app.db
+
+# Python version file (optional: remove if you want it tracked)
+# .python-version
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,29 +1,30 @@
 # Budget Bloom — Python dependencies
 # Install with: pip install -r requirements.txt
+# Python 3.11 required (see .python-version)
 
 # Web framework
 fastapi==0.115.6
 
-# ASGI server (with websocket + http/2 extras)
+# ASGI server
 uvicorn[standard]==0.34.0
 
 # ORM
 SQLAlchemy==2.0.36
 
-# PostgreSQL driver — psycopg2 (binary wheels available)
+# PostgreSQL driver (binary wheel — no compilation needed)
 psycopg2-binary==2.9.9
 
 # JWT
 python-jose[cryptography]==3.3.0
 
-# Pin cryptography to avoid compatibility issues with python-jose 3.3.0
+# Cryptography — pinned for python-jose 3.3.0 compatibility
 cryptography==42.0.8
 
 # Environment variables
 python-dotenv==1.0.1
 
-# Pydantic v2 with email validation — 2.11+ has Python 3.14 wheels
+# Pydantic v2 — 2.11+ ships pre-built wheels for all supported Python versions
 pydantic[email]==2.11.5
 
-# Required by FastAPI for OAuth2 form parsing (Swagger Authorize button)
+# Required by FastAPI for OAuth2 form parsing
 python-multipart==0.0.9
