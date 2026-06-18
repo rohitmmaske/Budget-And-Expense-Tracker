@@ -10,12 +10,7 @@ uvicorn[standard]==0.34.0
 # ORM
 SQLAlchemy==2.0.36
 
-# PostgreSQL driver — psycopg v3 (preferred for Supabase)
-# On systems where binary wheels are unavailable, psycopg2-binary is the fallback.
-# The app detects which is installed at runtime.
-psycopg[binary]==3.2.3
-
-# PostgreSQL driver — psycopg2 fallback
+# PostgreSQL driver — psycopg2 (binary wheels available for Python 3.12)
 psycopg2-binary==2.9.9
 
 # JWT
