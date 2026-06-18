@@ -1,0 +1,514 @@
+{
+  "info": {
+    "_postman_id": "budget-bloom-v2",
+    "name": "Budget Bloom — Expense & Budget API",
+    "description": "Complete Postman collection for Budget Bloom FastAPI backend.\n\n**Setup:**\n1. Import this collection\n2. Set `base_url` variable to `http://127.0.0.1:8000`\n3. Run **Register** or **Login** — token is saved automatically\n4. All other requests use the saved token automatically\n\n**Flow:** Register → Add Salary → Add Expense → Add Saving → Set Budget → Check Summary",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000", "type": "string" },
+    { "key": "token",    "value": "",                        "type": "string" },
+    { "key": "expense_id", "value": "1",                    "type": "string" },
+    { "key": "saving_id",  "value": "1",                    "type": "string" },
+    { "key": "budget_id",  "value": "1",                    "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Status ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Has access_token', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json).to.have.property('access_token');",
+            "  pm.collectionVariables.set('token', json.access_token);",
+            "  console.log('Token saved:', json.access_token.substring(0,30) + '...');",
+            "});",
+            "pm.test('Has user object', () => {",
+            "  const user = pm.response.json().user;",
+            "  pm.expect(user).to.have.property('id');",
+            "  pm.expect(user).to.have.property('email');",
+            "  pm.expect(user).to.have.property('full_name');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Rohit Sharma\",\n  \"email\": \"rohit@example.com\",\n  \"password\": \"test123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Token saved', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json.access_token).to.be.a('string');",
+            "  pm.collectionVariables.set('token', json.access_token);",
+            "});",
+            "pm.test('Token type is bearer', () => {",
+            "  pm.expect(pm.response.json().token_type).to.eql('bearer');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rohit@example.com\",\n  \"password\": \"test123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Current User (me)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns user profile', () => {",
+            "  const u = pm.response.json();",
+            "  pm.expect(u).to.have.keys(['id','full_name','email','created_at']);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Login — Wrong Password (expect 401)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 401 for wrong password', () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rohit@example.com\",\n  \"password\": \"wrongpassword\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Access Without Token (expect 401)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 401 without token', () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Salary / Income",
+      "item": [
+        {
+          "name": "Add Salary",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Income has correct amount', () => {",
+            "  pm.expect(pm.response.json().amount).to.eql('50000.00');",
+            "});",
+            "pm.test('Income has user_id', () => {",
+            "  pm.expect(pm.response.json()).to.have.property('user_id');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50000,\n  \"source\": \"Salary\",\n  \"note\": \"June 2026 salary\",\n  \"income_date\": \"2026-06-01\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/salary", "host": ["{{base_url}}"], "path": ["finance", "salary"] }
+          }
+        },
+        {
+          "name": "Add Freelance Income",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Source is Freelance', () => pm.expect(pm.response.json().source).to.eql('Freelance'));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 8000,\n  \"source\": \"Freelance\",\n  \"note\": \"Website project\",\n  \"income_date\": \"2026-06-10\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/salary", "host": ["{{base_url}}"], "path": ["finance", "salary"] }
+          }
+        },
+        {
+          "name": "List All Income",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+            "pm.test('Sorted most recent first', () => {",
+            "  const items = pm.response.json();",
+            "  if (items.length > 1) {",
+            "    pm.expect(items[0].income_date >= items[1].income_date).to.be.true;",
+            "  }",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/finance/salary?limit=50&offset=0",
+              "host": ["{{base_url}}"], "path": ["finance","salary"],
+              "query": [{ "key": "limit", "value": "50" }, { "key": "offset", "value": "0" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expenses",
+      "item": [
+        {
+          "name": "Add Expense — Food",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Category is Food', () => pm.expect(pm.response.json().category).to.eql('Food'));",
+            "pm.test('Has user_id', () => pm.expect(pm.response.json()).to.have.property('user_id'));",
+            "const id = pm.response.json().id;",
+            "pm.collectionVariables.set('expense_id', String(id));",
+            "console.log('expense_id saved:', id);"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 450,\n  \"category\": \"Food\",\n  \"title\": \"Dinner at restaurant\",\n  \"note\": \"Weekend dinner\",\n  \"expense_date\": \"2026-06-15\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/expenses", "host": ["{{base_url}}"], "path": ["finance", "expenses"] }
+          }
+        },
+        {
+          "name": "Add Expense — Travel",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1200,\n  \"category\": \"Travel\",\n  \"title\": \"Bus ticket\",\n  \"expense_date\": \"2026-06-16\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/expenses", "host": ["{{base_url}}"], "path": ["finance", "expenses"] }
+          }
+        },
+        {
+          "name": "Add Expense — Invalid (expect 422)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 422 for negative amount', () => pm.response.to.have.status(422));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": -100,\n  \"category\": \"Food\",\n  \"title\": \"Bad entry\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/expenses", "host": ["{{base_url}}"], "path": ["finance", "expenses"] }
+          }
+        },
+        {
+          "name": "List All Expenses",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/finance/expenses?limit=100&offset=0",
+              "host": ["{{base_url}}"], "path": ["finance","expenses"],
+              "query": [{ "key": "limit", "value": "100" }, { "key": "offset", "value": "0" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Expense",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));"
+          ]}}],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/expenses/{{expense_id}}", "host": ["{{base_url}}"], "path": ["finance","expenses","{{expense_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Non-Existent (expect 404)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 404', () => pm.response.to.have.status(404));"
+          ]}}],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/expenses/999999", "host": ["{{base_url}}"], "path": ["finance","expenses","999999"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Savings",
+      "item": [
+        {
+          "name": "Add Saving",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Has goal_name', () => pm.expect(pm.response.json()).to.have.property('goal_name'));",
+            "pm.collectionVariables.set('saving_id', String(pm.response.json().id));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 10000,\n  \"goal_name\": \"Laptop Fund\",\n  \"note\": \"Saving for MacBook\",\n  \"saving_date\": \"2026-06-01\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/savings", "host": ["{{base_url}}"], "path": ["finance", "savings"] }
+          }
+        },
+        {
+          "name": "List All Savings",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/savings", "host": ["{{base_url}}"], "path": ["finance", "savings"] }
+          }
+        },
+        {
+          "name": "Delete Saving",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 204', () => pm.response.to.have.status(204));"
+          ]}}],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/savings/{{saving_id}}", "host": ["{{base_url}}"], "path": ["finance","savings","{{saving_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Budgets",
+      "item": [
+        {
+          "name": "Set Budget — Food",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Budget has user_id', () => pm.expect(pm.response.json()).to.have.property('user_id'));",
+            "pm.collectionVariables.set('budget_id', String(pm.response.json().id));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Food\",\n  \"monthly_limit\": 5000,\n  \"month\": \"2026-06\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/budgets", "host": ["{{base_url}}"], "path": ["finance", "budgets"] }
+          }
+        },
+        {
+          "name": "Update Budget (upsert same category+month)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Limit updated to 6000', () => pm.expect(pm.response.json().monthly_limit).to.eql('6000.00'));",
+            "pm.test('Same ID (upsert, not new row)', () => {",
+            "  pm.expect(String(pm.response.json().id)).to.eql(pm.collectionVariables.get('budget_id'));",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Food\",\n  \"monthly_limit\": 6000,\n  \"month\": \"2026-06\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/budgets", "host": ["{{base_url}}"], "path": ["finance", "budgets"] }
+          }
+        },
+        {
+          "name": "Set Budget — Invalid Month (expect 422)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 422 for month=13', () => pm.response.to.have.status(422));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Food\",\n  \"monthly_limit\": 1000,\n  \"month\": \"2026-13\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/finance/budgets", "host": ["{{base_url}}"], "path": ["finance", "budgets"] }
+          }
+        },
+        {
+          "name": "List All Budgets",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/budgets", "host": ["{{base_url}}"], "path": ["finance", "budgets"] }
+          }
+        },
+        {
+          "name": "Delete Budget",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 204', () => pm.response.to.have.status(204));"
+          ]}}],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/budgets/{{budget_id}}", "host": ["{{base_url}}"], "path": ["finance","budgets","{{budget_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard & Charts",
+      "item": [
+        {
+          "name": "Summary",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Summary has all required fields', () => {",
+            "  const s = pm.response.json();",
+            "  ['total_income','total_expense','total_savings','balance_after_expense','available_balance'].forEach(f => {",
+            "    pm.expect(s).to.have.property(f);",
+            "  });",
+            "});",
+            "pm.test('Balance = income - expense - savings', () => {",
+            "  const s = pm.response.json();",
+            "  const expected = (Number(s.total_income) - Number(s.total_expense) - Number(s.total_savings)).toFixed(2);",
+            "  pm.expect(Number(s.available_balance).toFixed(2)).to.eql(expected);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/summary", "host": ["{{base_url}}"], "path": ["finance","summary"] }
+          }
+        },
+        {
+          "name": "Category Chart",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns array with category and total', () => {",
+            "  const items = pm.response.json();",
+            "  pm.expect(items).to.be.an('array');",
+            "  if (items.length > 0) {",
+            "    pm.expect(items[0]).to.have.keys(['category','total']);",
+            "  }",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/charts/categories", "host": ["{{base_url}}"], "path": ["finance","charts","categories"] }
+          }
+        },
+        {
+          "name": "Monthly Chart",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Returns 12 months', () => {",
+            "  pm.expect(pm.response.json().length).to.eql(12);",
+            "});",
+            "pm.test('Each month has income/expense/savings', () => {",
+            "  pm.response.json().forEach(m => {",
+            "    pm.expect(m).to.have.keys(['month','income','expense','savings']);",
+            "  });",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/finance/charts/monthly", "host": ["{{base_url}}"], "path": ["finance","charts","monthly"] }
+          }
+        }
+      ]
+    }
+  ]
+}

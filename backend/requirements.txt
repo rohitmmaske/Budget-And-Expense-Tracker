@@ -1,0 +1,34 @@
+# Budget Bloom — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# Web framework
+fastapi==0.115.6
+
+# ASGI server (with websocket + http/2 extras)
+uvicorn[standard]==0.34.0
+
+# ORM
+SQLAlchemy==2.0.36
+
+# PostgreSQL driver — psycopg v3 (preferred for Supabase)
+# On systems where binary wheels are unavailable, psycopg2-binary is the fallback.
+# The app detects which is installed at runtime.
+psycopg[binary]==3.2.3
+
+# PostgreSQL driver — psycopg2 fallback
+psycopg2-binary==2.9.9
+
+# JWT
+python-jose[cryptography]==3.3.0
+
+# Pin cryptography to avoid compatibility issues with python-jose 3.3.0
+cryptography==42.0.8
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Pydantic v2 with email validation
+pydantic[email]==2.10.4
+
+# Required by FastAPI for OAuth2 form parsing (Swagger Authorize button)
+python-multipart==0.0.9
