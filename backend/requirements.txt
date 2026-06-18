@@ -10,7 +10,7 @@ uvicorn[standard]==0.34.0
 # ORM
 SQLAlchemy==2.0.36
 
-# PostgreSQL driver — psycopg2 (binary wheels available for Python 3.12)
+# PostgreSQL driver — psycopg2 (binary wheels available)
 psycopg2-binary==2.9.9
 
 # JWT
@@ -22,8 +22,8 @@ cryptography==42.0.8
 # Environment variables
 python-dotenv==1.0.1
 
-# Pydantic v2 with email validation
-pydantic[email]==2.10.4
+# Pydantic v2 with email validation — 2.11+ has Python 3.14 wheels
+pydantic[email]==2.11.5
 
 # Required by FastAPI for OAuth2 form parsing (Swagger Authorize button)
 python-multipart==0.0.9
